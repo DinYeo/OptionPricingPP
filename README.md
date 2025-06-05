@@ -1,5 +1,7 @@
 # OptionPricingPP
 Personal Project for Option Pricing
+# Link to Project Plan
+https://www.notion.so/Pricing-Engines-208fe221867480699c16ce47e897dba3?source=copy_link
 
 # Black Scholes Model
 $$V = \phi[Se^{-q(T-t)}N(\phi d_1)-Xe^{-r(T-t)}N(\phi d_2)]$$
