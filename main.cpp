@@ -14,14 +14,52 @@ Eqn: N(x) = 0.5 * (1 + erf(x / sqrt(2)))
 #include <cmath> // For mathematical functions (std::sqrt, std::exp, std::log))
 #include <iomanip> // For setting output precision (std::setprecision)
 
-// Function Prototypes
-void checkValues(double T, double sigma);
-double normalCDF(double x);
-double callOption(double S, double K, double r, double T, double sigma);
-double putOption(double S, double K, double r, double T, double sigma);
+class BlackScholesCal
+{
+    public:
+        BlackScholesCal(double S, double K, double r, double T, double sigma)
+            : S_(S), K_(K), r_(r), T_(T), sigma_(sigma)
+        {
+            // Private member function to check the validity of the input values
+            checkValues();
+        }
+
+        // Public methods to calculate the price of Call and Put options
+        double callOption() const;
+        double putOption() const;
+
+    private:
+        double S_; // Current stock price
+        double K_; // Strike price
+        double r_; // Risk-free interest rate
+        double T_; // Time to expiration in years
+        double sigma_; // Volatility
+
+        double normalCDF(double x) const
+        {
+            // Cumulative distribution function for the standard normal distribution
+            return 0.5 * (1.0 + std::erf(x / std::sqrt(2.0)));
+        }
+        
+        void checkValues() const
+        {
+            // Check if the time to expiration and volatility are valid
+            if (T_ <= 0) {
+                std::cerr << "Error: Time to expiration must be greater than 0. Please re-enter a positive value for Time to expiration" 
+                << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            if (sigma_ <= 0) {
+                std::cerr << "Error: Volatility must be greater than 0. Please re-enter a positive value for volatility" 
+                << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+
+};
 
 int main() {
-    // Declare variables for black-scholes parameters
+    // Declare variables for the parameters
     double S, K, r, T, sigma;
 
     // Get user input for the parameters
@@ -39,9 +77,6 @@ int main() {
 
     std::cout << "Enter the Volatility: ";
     std::cin >> sigma;
-    
-    // Check if the time to expiration and volatility are valid
-    checkValues(T, sigma);
 
     // Confirm the values entered by the user
     std::cout << "\nValues you've entered:" << std::endl;
@@ -51,58 +86,39 @@ int main() {
     std::cout << "Time to expiration (T): " << T << std::endl;
     std::cout << "Volatility (sigma): " << sigma << std::endl;
 
+    // Creates an instance of the BlackScholesCal class
+    BlackScholesCal OptionPricer(S, K, r, T, sigma);
+
     // std::setprecisious is(2) sets the precision of the output to 2 decimal places
     std::cout << "\nPrice of the Call Option: " << std::fixed << std::setprecision(2) 
-    << callOption(S, K, r, T, sigma) << std::endl;
+    << OptionPricer.callOption() << std::endl;
     std::cout << "Price of the Put Option: " << std::fixed << std::setprecision(2) 
-    << putOption(S, K, r, T, sigma) << std::endl;
+    << OptionPricer.putOption() << std::endl;
 
     return 0;
 }
 
-void checkValues(double T, double sigma)
-{
-    // Check if the time to expiration and volatility are valid
-    if (T <= 0) {
-        std::cerr << "Error: Time to expiration must be greater than 0. Please re-enter a positive value for Time to expiration" 
-        << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    if (sigma <= 0) {
-        std::cerr << "Error: Volatility must be greater than 0. Please re-enter a positive value for volatility" 
-        << std::endl;
-        exit(EXIT_FAILURE);
-    }
-}
-
-
-double normalCDF(double x)
-{
-    // Cumulative distribution function for the standard normal distribution
-    return 0.5 * std::erf(-x / std::sqrt(2.0));
-}
-
-double callOption(double S, double K, double r, double T, double sigma)
+// Function is defined outside the class
+double BlackScholesCal::callOption() const
 {
     double C;
 
     // Calculate the price of the Call Option using the Black-Scholes formula
-    double d1 = (std::log(S / K) + ((r + std::pow(sigma, 2) / 2) * T) / sigma * std::sqrt(T));
-    double d2 = d1 - sigma*std::sqrt(T);
-    C = S * normalCDF(d1) - K * std::exp(-r * T) * normalCDF(d2);
+    double d1 = (std::log(S_ / K_) + ((r_ + (std::pow(sigma_, 2) / 2)) * T_) / (sigma_ * std::sqrt(T_)));
+    double d2 = d1 - sigma_*std::sqrt(T_);
+    C = S_ * normalCDF(d1) - K_ * std::exp(-r_ * T_) * normalCDF(d2);
 
     return C; // Set precision to 2 decimal places
 }
 
-double putOption(double S, double K, double r, double T, double sigma)
+double BlackScholesCal::putOption() const
 {
     double P;
 
     // Calculate the price of the Put Option using the Black-Scholes formula
-    double d1 = (std::log(S / K) + ((r + std::pow(sigma, 2) / 2) * T)) / (sigma * std::sqrt(T));
-    double d2 = d1 - sigma * std::sqrt(T);
-    P = -S * normalCDF(-d1) + K * std::exp(-r * T) * normalCDF(-d2);
-
+    double d1 = (std::log(S_ / K_) + ((r_ + (std::pow(sigma_, 2) / 2)) * T_) / (sigma_ * std::sqrt(T_)));
+    double d2 = d1 - sigma_ * std::sqrt(T_);
+    P = -S_ * normalCDF(-d1) + K_ * std::exp(-r_ * T_) * normalCDF(-d2);
 
     return P;
 }
