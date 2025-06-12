@@ -1,12 +1,19 @@
 /* 
 
-This program calculates the price of a European option using the Black-Scholes
+This program calculates the price of a European option for a non-dividend payingg asset using the Black-Scholes
 Model.
 
 CDF of the standard normal disitrbution determins the fair prie of the option.
 It calculates the probability that a r.v. will fall below a certain value, 
 likelihood that the option will expire in-the-money or out-of-the-money.
 Eqn: N(x) = 0.5 * (1 + erf(x / sqrt(2)))
+
+*/
+
+
+/* 
+Syntax used in the code:
+std::fixed - sets the output of floating-point numbers to a fixed decimal point -> guarantees the display of 2 decimal places
 
 */
 
@@ -27,6 +34,9 @@ class BlackScholesCal
         // Public methods to calculate the price of Call and Put options
         double callOption() const;
         double putOption() const;
+        double greekDelta()const;
+        double greekGamma() const;
+        double greekTheta() const;
 
     private:
         double S_; // Current stock price
@@ -34,6 +44,10 @@ class BlackScholesCal
         double r_; // Risk-free interest rate
         double T_; // Time to expiration in years
         double sigma_; // Volatility
+        double d1 = (std::log(S_ / K_) + ((r_ + (std::pow(sigma_, 2) / 2)) * T_)) / (sigma_ * std::sqrt(T_));
+        double d2 = d1 - sigma_*std::sqrt(T_);
+        double d1_prime = (1 / std::sqrt((2 * M_PI))) * std::exp(-0.5 * std::pow(d1,2));
+
 
         double normalCDF(double x) const
         {
@@ -78,14 +92,6 @@ int main() {
     std::cout << "Enter the Volatility: ";
     std::cin >> sigma;
 
-    // Confirm the values entered by the user
-    std::cout << "\nValues you've entered:" << std::endl;
-    std::cout << "Current Stock Price (S): " << S << std::endl;
-    std::cout << "Strike Price (K): " << K << std::endl;
-    std::cout << "Risk-free interest rate (r): " << r << std::endl;
-    std::cout << "Time to expiration (T): " << T << std::endl;
-    std::cout << "Volatility (sigma): " << sigma << std::endl;
-
     // Creates an instance of the BlackScholesCal class
     BlackScholesCal OptionPricer(S, K, r, T, sigma);
 
@@ -95,30 +101,53 @@ int main() {
     std::cout << "Price of the Put Option: " << std::fixed << std::setprecision(2) 
     << OptionPricer.putOption() << std::endl;
 
+    // Option Greeks
+    std::cout << "\nDelta of the Call Option: " << std::fixed << std::setprecision(2)
+    << OptionPricer.greekDelta() << std::endl;
+    std::cout << "Gamma of the Call Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.greekGamma() << std::endl;
+    std::cout << "Theta of the Call Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.greekTheta() << std::endl;
+
     return 0;
 }
 
 // Function is defined outside the class
 double BlackScholesCal::callOption() const
 {
-    double C;
-
     // Calculate the price of the Call Option using the Black-Scholes formula
-    double d1 = (std::log(S_ / K_) + ((r_ + (std::pow(sigma_, 2) / 2)) * T_) / (sigma_ * std::sqrt(T_)));
-    double d2 = d1 - sigma_*std::sqrt(T_);
-    C = S_ * normalCDF(d1) - K_ * std::exp(-r_ * T_) * normalCDF(d2);
+    double C = S_ * normalCDF(d1) - K_ * std::exp(-r_ * T_) * normalCDF(d2);
 
     return C; // Set precision to 2 decimal places
 }
 
 double BlackScholesCal::putOption() const
 {
-    double P;
-
     // Calculate the price of the Put Option using the Black-Scholes formula
-    double d1 = (std::log(S_ / K_) + ((r_ + (std::pow(sigma_, 2) / 2)) * T_) / (sigma_ * std::sqrt(T_)));
-    double d2 = d1 - sigma_ * std::sqrt(T_);
-    P = -S_ * normalCDF(-d1) + K_ * std::exp(-r_ * T_) * normalCDF(-d2);
+    double P = -S_ * normalCDF(-d1) + K_ * std::exp(-r_ * T_) * normalCDF(-d2);
 
     return P;
+}
+
+double BlackScholesCal::greekDelta() const
+{
+    // Calculate the Delta of the Option, measures the change in price of the option with respect to the underlying
+    double delta = normalCDF(d1);
+    
+    return delta;
+}
+
+double BlackScholesCal::greekGamma() const
+{
+    // Calculate the Gamma of the Option, measures the r.o.c of the Delta with respect to the underlying
+    double gamma = d1_prime / (S_ * sigma_ * std::sqrt(T_));
+
+    return gamma;
+}
+
+double BlackScholesCal::greekTheta() const
+{
+    double theta = -(S_ * d1_prime * sigma_) / (2 * std::sqrt(T_)) - r_ * K_ * std::exp(-r_ * T_) * normalCDF(d2);
+
+    return theta;
 }

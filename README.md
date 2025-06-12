@@ -20,4 +20,25 @@ where
 - N(d2) - probability of d2
 $$d1 = \frac{\log{\frac{s}{x} + (r-q+\frac{1}{2}\sigma^2)(T-t)}}{\sigma \sqrt{T-t}}$$
 $$d2 = d1 - \sigma\sqrt{T-t}$$
+![Calculation of d1](image.png)
+![d2 in PDF](image-1.png)
+#
+### Calculating the price of a Call Option
+$$C(S_0,t) = S_0N(d_1) - Ke^{-r(T-t)}N(d_2)$$
+$S_0N(d_1)$ represents the RETURN = Stock Price * Probability Function
 
+$Ke^{-r(T-t)}N(d_2)$ represents the COST = Strike Price * Discount to 
+Present Value * Probability Function
+#
+
+## Delta of the Option
+##### Non-dividend paying stock
+$\Delta_{call} = N(d_1)$
+##### Stock w continuous dividend yield
+$\Delta_{call} = e^{-\delta T}N(d_1)$
+
+$e^{-\delta T}$
+- discount factor for the dividends, price depreciates by the dividend yield over time
+- underlying asset's price is adjusted by the present value of future dividends
+
+## Gamma of the Option
