@@ -34,9 +34,14 @@ class BlackScholesCal
         // Public methods to calculate the price of Call and Put options
         double callOption() const;
         double putOption() const;
-        double greekDelta()const;
-        double greekGamma() const;
-        double greekTheta() const;
+        double callgreekDelta()const;
+        double callgreekGamma() const;
+        double callgreekTheta() const;
+        double callgreekVega() const;
+        double callgreekRho() const;
+        double putgreekDelta() const;
+        double putgreekTheta() const;
+        double putgreekRho() const;
 
     private:
         double S_; // Current stock price
@@ -103,16 +108,28 @@ int main() {
 
     // Option Greeks
     std::cout << "\nDelta of the Call Option: " << std::fixed << std::setprecision(2)
-    << OptionPricer.greekDelta() << std::endl;
+    << OptionPricer.callgreekDelta() << std::endl;
     std::cout << "Gamma of the Call Option: " << std::fixed << std::setprecision(5)
-    << OptionPricer.greekGamma() << std::endl;
+    << OptionPricer.callgreekGamma() << std::endl;
     std::cout << "Theta of the Call Option: " << std::fixed << std::setprecision(5)
-    << OptionPricer.greekTheta() << std::endl;
+    << OptionPricer.callgreekTheta() << std::endl;
+    std::cout << "Vega of the Call Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.callgreekVega() << std::endl;
+    std::cout << "Rho of the Call Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.callgreekRho() << std::endl;
+
+    std::cout << "\nDelta of the Put Option: " << std::fixed << std::setprecision(2)
+    << OptionPricer.putgreekDelta() << std::endl;
+    std::cout << "Theta of the Put Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.putgreekTheta() << std::endl;
+    std::cout << "Rho of the Put Option: " << std::fixed << std::setprecision(5)
+    << OptionPricer.putgreekRho() << std::endl;
 
     return 0;
 }
 
 // Function is defined outside the class
+// const ensures that the function does not modify any member variables of the class
 double BlackScholesCal::callOption() const
 {
     // Calculate the price of the Call Option using the Black-Scholes formula
@@ -129,7 +146,7 @@ double BlackScholesCal::putOption() const
     return P;
 }
 
-double BlackScholesCal::greekDelta() const
+double BlackScholesCal::callgreekDelta() const
 {
     // Calculate the Delta of the Option, measures the change in price of the option with respect to the underlying
     double delta = normalCDF(d1);
@@ -137,7 +154,7 @@ double BlackScholesCal::greekDelta() const
     return delta;
 }
 
-double BlackScholesCal::greekGamma() const
+double BlackScholesCal::callgreekGamma() const
 {
     // Calculate the Gamma of the Option, measures the r.o.c of the Delta with respect to the underlying
     double gamma = d1_prime / (S_ * sigma_ * std::sqrt(T_));
@@ -145,9 +162,46 @@ double BlackScholesCal::greekGamma() const
     return gamma;
 }
 
-double BlackScholesCal::greekTheta() const
+double BlackScholesCal::callgreekTheta() const
 {
     double theta = -(S_ * d1_prime * sigma_) / (2 * std::sqrt(T_)) - r_ * K_ * std::exp(-r_ * T_) * normalCDF(d2);
 
     return theta;
+}
+
+// exp(-y * tau) discounts the spot price for continuous dividends over the option's life
+// for non-dividend paying assets, exp(-y * tau) = exp(0) = 1
+double BlackScholesCal::callgreekVega() const
+{
+    double vega = S_ * d1_prime * std::sqrt(T_);
+    
+    return vega;
+}
+
+double BlackScholesCal::callgreekRho() const
+{
+    double rho = K_ * T_ * std::exp(-r_ * T_) * normalCDF(d2);
+
+    return rho;
+}
+
+double BlackScholesCal::putgreekDelta() const
+{
+    double delta = normalCDF(d1) - 1;
+    
+    return delta;
+}
+
+double BlackScholesCal::putgreekTheta() const
+{
+    double theta = -(S_ * d1_prime * sigma_) / (2 * std::sqrt(T_)) + r_ * K_ * std::exp(-r_ * T_) * normalCDF(-d2);
+
+    return theta;
+}
+
+double BlackScholesCal::putgreekRho() const
+{
+    double rho = -K_ * T_ * std::exp(-r_ * T_) * normalCDF(-d2);
+
+    return rho;
 }
